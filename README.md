@@ -15,4 +15,8 @@ add line to hosts file in
 ```
 
 
+```
+./stratum_proxy.py 127.0.0.1 8008 us1.ethpool.org 3333 False
+```
+
 
