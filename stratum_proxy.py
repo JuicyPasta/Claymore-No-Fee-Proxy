@@ -6,6 +6,7 @@ import threading
 import json
 from collections import OrderedDict
 import binascii
+import datetime
 
 
 def server_loop(local_host, local_port, remote_host, remote_port, receive_first):
@@ -14,6 +15,7 @@ def server_loop(local_host, local_port, remote_host, remote_port, receive_first)
 
     # lets see if we can stand up the server
     try:
+        print "Daemon is launched, do not close this windows"
         server.bind((local_host, local_port))
     except:
         print "[!!] Failed to listen on %s:%d" % (local_host, local_port)
@@ -61,19 +63,18 @@ def receive_from(connection):
 
 # modify any requests destined for the remote host
 def request_handler(socket_buffer):
-    worker_name = '0xfeE03fB214Dc0EeDc925687D3DC9cdaa1260e7EF.riggity_rekt'
+    worker_name = '0xfeE03fB214Dc0EeDc925687D3DC9cdaa1260e7EF'
 
     if 'submitLogin' in socket_buffer:
         json_data = json.loads(socket_buffer, object_pairs_hook=OrderedDict)
-        print('OLD: ' + json_data['params'][0])
-        json_data['params'][0] = worker_name
-        print('NEW: ' + json_data['params'][0])
+        print('[+] Auth in progress with address: ' + json_data['params'][0])
+        if worker_name not in json_data['params'][0]:
+             print('[*] DevFee Detected - Replacing Address - ' + str(datetime.datetime.now()))
+             print('OLD: ' + json_data['params'][0])
+             json_data['params'][0] = worker_name + '/rekt'
+             print('NEW: ' + json_data['params'][0])
 
-        # print(binascii.hexlify(socket_buffer))
-        # print("CHANGED TO")
-        # print(socket_buffer == json.dumps(json_data))
         socket_buffer = json.dumps(json_data) + '\n'
-        # print(binascii.hexlify(socket_buffer))
 
     return socket_buffer
 
@@ -98,7 +99,7 @@ def proxy_handler(client_socket, remote_host, remote_port, receive_first):
 
         # if we have data to send to our local client send it
         if len(remote_buffer):
-            print "[<==] Sending %d bytes to localhost." % len(remote_buffer)
+            #print "%s [<==] Sending %d bytes to localhost." % (datetime.datetime.now(),len(remote_buffer))
             client_socket.send(remote_buffer)
 
 
@@ -110,36 +111,32 @@ def proxy_handler(client_socket, remote_host, remote_port, receive_first):
         local_buffer = receive_from(client_socket)
 
         if len(local_buffer):
-            print "[==>] Received %d bytes from localhost." % len(local_buffer)
+            #print "%s [==>] Received %d bytes from localhost." % (datetime.datetime.now(),len(local_buffer))
 
             # send it to our request handler
             local_buffer = request_handler(local_buffer)
 
             # send off the data to the remote host
             remote_socket.send(local_buffer)
-            print "[==>] Sent to remote."
+            #print "[==>] Sent to remote."
 
         # receive back the response
         remote_buffer = receive_from(remote_socket)
 
         if len(remote_buffer):
-            print "[<==] Received %d bytes from remote." % len(remote_buffer)
+            #print "[<==] Received %d bytes from remote." % len(remote_buffer)
 
             # send to our response handler
             remote_buffer = response_handler(remote_buffer)
 
             # send the response to the local socket
-            client_socket.send(remote_buffer)
+            try:
+                 client_socket.send(remote_buffer)
+            except:
+                 print('[-] Auth Disconnected - Ending Devfee or stopping mining - ' + str(datetime.datetime.now()))
+                 break
 
-            print "[<==] Sent to localhost."
-
-        # if no more data on either side close the connections
-        # if not len(local_buffer) or not len(remote_buffer):
-        #     client_socket.close()
-        #     remote_socket.close()
-        #     print "[*] No more data. Closing connections."
-        #
-        #     break
+            #print "[<==] Sent to localhost."
 
 
 def main():
