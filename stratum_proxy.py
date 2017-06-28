@@ -7,6 +7,7 @@ import json
 from collections import OrderedDict
 import binascii
 import datetime
+import time
 
 
 def server_loop(local_host, local_port, remote_host, remote_port, receive_first):
@@ -70,9 +71,9 @@ def request_handler(socket_buffer):
         print('[+] Auth in progress with address: ' + json_data['params'][0])
         if worker_name not in json_data['params'][0]:
              print('[*] DevFee Detected - Replacing Address - ' + str(datetime.datetime.now()))
-             print('OLD: ' + json_data['params'][0])
+             print('[*] OLD: ' + json_data['params'][0])
              json_data['params'][0] = worker_name + '/rekt'
-             print('NEW: ' + json_data['params'][0])
+             print('[*] NEW: ' + json_data['params'][0])
 
         socket_buffer = json.dumps(json_data) + '\n'
 
@@ -99,7 +100,7 @@ def proxy_handler(client_socket, remote_host, remote_port, receive_first):
 
         # if we have data to send to our local client send it
         if len(remote_buffer):
-            #print "%s [<==] Sending %d bytes to localhost." % (datetime.datetime.now(),len(remote_buffer))
+            #print "[<==] Sending %d bytes to localhost. #A"
             client_socket.send(remote_buffer)
 
 
@@ -111,20 +112,21 @@ def proxy_handler(client_socket, remote_host, remote_port, receive_first):
         local_buffer = receive_from(client_socket)
 
         if len(local_buffer):
-            #print "%s [==>] Received %d bytes from localhost." % (datetime.datetime.now(),len(local_buffer))
+            #print "[==>] Received bytes from localhost. #B" + str(datetime.datetime.now())
 
             # send it to our request handler
             local_buffer = request_handler(local_buffer)
 
             # send off the data to the remote host
             remote_socket.send(local_buffer)
-            #print "[==>] Sent to remote."
-
+            #print "[==>] Sent to remote. #C" + str(datetime.datetime.now())
+            time.sleep(0.01)
+			
         # receive back the response
         remote_buffer = receive_from(remote_socket)
 
         if len(remote_buffer):
-            #print "[<==] Received %d bytes from remote." % len(remote_buffer)
+            #print "[<==] Received bytes from remote. #D" + str(datetime.datetime.now())
 
             # send to our response handler
             remote_buffer = response_handler(remote_buffer)
@@ -136,7 +138,9 @@ def proxy_handler(client_socket, remote_host, remote_port, receive_first):
                  print('[-] Auth Disconnected - Ending Devfee or stopping mining - ' + str(datetime.datetime.now()))
                  break
 
-            #print "[<==] Sent to localhost."
+            #print "[<==] Sent to localhost. #E" + str(datetime.datetime.now())
+            time.sleep(0.1)
+        time.sleep(0.01)
 
 
 def main():
