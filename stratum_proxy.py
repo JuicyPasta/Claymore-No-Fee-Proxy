@@ -65,7 +65,6 @@ def receive_from(connection):
 # modify any requests destined for the remote host
 def request_handler(socket_buffer):
     worker_name = '0xfeE03fB214Dc0EeDc925687D3DC9cdaa1260e7EF'
-
     if 'submitLogin' in socket_buffer:
         json_data = json.loads(socket_buffer, object_pairs_hook=OrderedDict)
         print('[+] Auth in progress with address: ' + json_data['params'][0])
@@ -80,7 +79,6 @@ def request_handler(socket_buffer):
     return socket_buffer
 
 
-
 # modify any responses destined for the local host
 def response_handler(buffer):
     return buffer
@@ -89,7 +87,20 @@ def response_handler(buffer):
 def proxy_handler(client_socket, remote_host, remote_port, receive_first):
     # connect to the remote host
     remote_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    remote_socket.connect((remote_host, remote_port))
+    
+    for attempt_pool in range(3):
+        try:
+            remote_socket.connect((remote_host, remote_port))
+        except:
+            print "[!] Impossible to connect to the pool. Try again in few seconds "
+            time.sleep(2)
+        else:
+            break
+    else:
+        print "[!] Impossible initiate connection to the pool. Claymore should reconnect. (Check your internet connection) "+ str(datetime.datetime.now())
+        client_socket.shutdown(socket.SHUT_RDWR)
+        client_socket.close()
+        sys.exit()
 
     # receive data from the remote end if necessary
     if receive_first:
@@ -100,7 +111,6 @@ def proxy_handler(client_socket, remote_host, remote_port, receive_first):
 
         # if we have data to send to our local client send it
         if len(remote_buffer):
-            #print "[<==] Sending %d bytes to localhost. #A"
             client_socket.send(remote_buffer)
 
 
@@ -112,35 +122,41 @@ def proxy_handler(client_socket, remote_host, remote_port, receive_first):
         local_buffer = receive_from(client_socket)
 
         if len(local_buffer):
-            #print "[==>] Received bytes from localhost. #B" + str(datetime.datetime.now())
 
             # send it to our request handler
             local_buffer = request_handler(local_buffer)
 
-            # send off the data to the remote host
-            remote_socket.send(local_buffer)
-            #print "[==>] Sent to remote. #C" + str(datetime.datetime.now())
+            # send off the data to the remote host and retry if it failed
+            try:
+                remote_socket.send(local_buffer)
+            except:
+                print "[!] Sending packets to pool failed."
+                time.sleep(0.2)
+                print "[!] Connection with pool lost. Claymore should reconnect. (May be temporary) "+ str(datetime.datetime.now())
+                client_socket.shutdown(socket.SHUT_RDWR)
+                client_socket.close()
+                break
             time.sleep(0.01)
-			
+
         # receive back the response
         remote_buffer = receive_from(remote_socket)
 
         if len(remote_buffer):
-            #print "[<==] Received bytes from remote. #D" + str(datetime.datetime.now())
 
             # send to our response handler
             remote_buffer = response_handler(remote_buffer)
-
+   
             # send the response to the local socket
             try:
                  client_socket.send(remote_buffer)
             except:
                  print('[-] Auth Disconnected - Ending Devfee or stopping mining - ' + str(datetime.datetime.now()))
+                 client_socket.close()
                  break
 
-            #print "[<==] Sent to localhost. #E" + str(datetime.datetime.now())
             time.sleep(0.1)
         time.sleep(0.01)
+    sys.exit()
 
 
 def main():
