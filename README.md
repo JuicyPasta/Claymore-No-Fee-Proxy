@@ -65,7 +65,7 @@ Yes, we recommand to install the proxy on every mining station. If you have a fa
 ### Is it compatible with every currency?
 This proxy was designed to be used with Claymore ETH version. If you are planning to mine ETH-like, you have to specify `-allcoins 1` in claymore and replace the host file with the right pool. [Windows guide here](https://github.com/JuicyPasta/Claymore-No-Fee-Proxy/wiki/Redirecting-all-domains-(Win))  
 Since Claymore 9.6 you are able to mine ETC more easily, use `-allcoins etc` and adapt the guide above with the right values (domains and ports).
-Zcash version in the futur ?
+Zcash version in the futur?
 
 ### Is it compatible with dual mode mining?
 Yes, the claymore software take the fee from ETH mining only.
