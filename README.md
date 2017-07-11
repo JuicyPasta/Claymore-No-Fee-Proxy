@@ -32,13 +32,11 @@ Place this at the end:
 127.0.0.1   eth-eu.dwarfpool.com
 ```
 
-## Configure your address
-Spot and edit the `worker_name` variable in `stratum_proxy.py` and replace it by yours.
 
 ## RUN
 Run the proxy daemon first and pay attention to change the pool you use (here nanopool):
 ```
-./stratum_proxy.py 127.0.0.1 8008 eth-eu2.nanopool.org 9999 False
+./stratum_proxy.py 127.0.0.1 8008 eth-eu2.nanopool.org 9999 0xB7716d5A768Bc0d5bc5c216cF2d85023a697D04D
 ```
 
 Run the mining software with the fake pool name
@@ -46,6 +44,10 @@ Run the mining software with the fake pool name
 ./ethdcrminer64 -epool eth-eu.dwarfpool.com:8008 ....
 ```
 
+## Known issues
+- Mining ETH-Fork coins is not fully supported.
+- Proxy is only compatible with ESM mode 0 
+- Possible issue with the worker name separator with some pools
 
 ## FAQ
 
@@ -74,7 +76,7 @@ Yes, the claymore software take the fee from ETH mining only.
 Read the window output (1 devfee per hour). You can also check your pool stats, but some pool ignore small mining time if it did not find a share. But it mines for you !
 
 ### Claymore warns me something about local proxy...
-Do not worry, Claymore check the pool's IP to avoid local proxies, because it can cause stale shares. In our case, the proxy is on the same computer so the lag is trivial. Personally, I never had any stale shares.
+Do not worry, Claymore check the pool's IP to avoid local proxies, because it can cause stale shares. In our case, the proxy is on the same computer so the lag is trivial. You can create a fake wan network to remove the warnings.
 
 ### I detect a strange behaviour or reduced hashrate with untested claymore version
 If you see something wrong with a new Claymore version, maybe the cheat has been detected and Claymore tries to punish us.

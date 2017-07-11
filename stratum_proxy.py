@@ -10,7 +10,7 @@ import datetime
 import time
 
 
-def server_loop(local_host, local_port, remote_host, remote_port, receive_first):
+def server_loop(local_host, local_port, remote_host, remote_port):
     # create the server object
     server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
@@ -34,7 +34,7 @@ def server_loop(local_host, local_port, remote_host, remote_port, receive_first)
 
         # start a new thread to talk to the remote host
         proxy_thread = threading.Thread(target=proxy_handler,
-                                        args=(client_socket, remote_host, remote_port, receive_first))
+                                        args=(client_socket, remote_host, remote_port))
         proxy_thread.daemon = False
 
         proxy_thread.start()
@@ -64,19 +64,25 @@ def receive_from(connection):
 
 # modify any requests destined for the remote host
 def request_handler(socket_buffer):
-    worker_name = '0xfeE03fB214Dc0EeDc925687D3DC9cdaa1260e7EF'
+    #Here is the good part
+    
+    #If it is an Auth packet
     if 'submitLogin' in socket_buffer:
         json_data = json.loads(socket_buffer, object_pairs_hook=OrderedDict)
         print('[+] Auth in progress with address: ' + json_data['params'][0])
+        #If the auth contain an other address than our
         if worker_name not in json_data['params'][0]:
              print('[*] DevFee Detected - Replacing Address - ' + str(datetime.datetime.now()))
              print('[*] OLD: ' + json_data['params'][0])
+             #We replace the address
              json_data['params'][0] = worker_name + '/rekt'
              print('[*] NEW: ' + json_data['params'][0])
 
         socket_buffer = json.dumps(json_data) + '\n'
-
+        
+    #Packet is forged, ready to send.
     return socket_buffer
+
 
 
 # modify any responses destined for the local host
@@ -84,10 +90,11 @@ def response_handler(buffer):
     return buffer
 
 
-def proxy_handler(client_socket, remote_host, remote_port, receive_first):
-    # connect to the remote host
+def proxy_handler(client_socket, remote_host, remote_port):
+    # We prepare the connection
     remote_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     
+    # We will try to connect to the remote pool
     for attempt_pool in range(3):
         try:
             remote_socket.connect((remote_host, remote_port))
@@ -95,24 +102,18 @@ def proxy_handler(client_socket, remote_host, remote_port, receive_first):
             print "[!] Impossible to connect to the pool. Try again in few seconds "
             time.sleep(2)
         else:
+            # Connection OK
             break
     else:
         print "[!] Impossible initiate connection to the pool. Claymore should reconnect. (Check your internet connection) "+ str(datetime.datetime.now())
+        
+        #Closing connection
         client_socket.shutdown(socket.SHUT_RDWR)
         client_socket.close()
+        
+        #Exiting Thread
         sys.exit()
-
-    # receive data from the remote end if necessary
-    if receive_first:
-        remote_buffer = receive_from(remote_socket)
-
-        # send it to our response handler
-        remote_buffer = response_handler(remote_buffer)
-
-        # if we have data to send to our local client send it
-        if len(remote_buffer):
-            client_socket.send(remote_buffer)
-
+        
 
     # now let's loop and reading from local, send to remote, send to local
     # rinse wash repeat
@@ -120,33 +121,41 @@ def proxy_handler(client_socket, remote_host, remote_port, receive_first):
 
         # read from local host
         local_buffer = receive_from(client_socket)
-
+        
         if len(local_buffer):
 
             # send it to our request handler
             local_buffer = request_handler(local_buffer)
-
-            # send off the data to the remote host and retry if it failed
+            
+            #print local_buffer
+            
+            # Try to send off the data to the remote pool
             try:
                 remote_socket.send(local_buffer)
             except:
                 print "[!] Sending packets to pool failed."
-                time.sleep(0.2)
+                time.sleep(0.02)
                 print "[!] Connection with pool lost. Claymore should reconnect. (May be temporary) "+ str(datetime.datetime.now())
+                #Closing connection
                 client_socket.shutdown(socket.SHUT_RDWR)
                 client_socket.close()
+                #Exiting loop
                 break
-            time.sleep(0.01)
+                
+            # Adding delay to avoid too much CPU Usage
+            time.sleep(0.001)
 
         # receive back the response
         remote_buffer = receive_from(remote_socket)
 
         if len(remote_buffer):
-
+            
             # send to our response handler
             remote_buffer = response_handler(remote_buffer)
-   
-            # send the response to the local socket
+            
+            #print local_buffer
+            
+            # Try to send the response to the local socket
             try:
                  client_socket.send(remote_buffer)
             except:
@@ -154,16 +163,19 @@ def proxy_handler(client_socket, remote_host, remote_port, receive_first):
                  client_socket.close()
                  break
 
-            time.sleep(0.1)
-        time.sleep(0.01)
+            # Adding delay to avoid too much CPU Usage
+            time.sleep(0.001)
+        time.sleep(0.001)
+        
+    #Clean exit if we break the loop
     sys.exit()
 
 
 def main():
     # cursory check of command line args
     if len(sys.argv[1:]) != 5:
-        print "Usage: ./proxy.py [localhost] [localport] [remotehost] [remoteport] [reveive_first]"
-        print "Example: ./proxy.py 127.0.0.1 9000 10.11.132.1 9000 True"
+        print "Usage: ./proxy.py [localhost] [localport] [remotehost] [remoteport] [ETH Wallet]"
+        print "Example: ./proxy.py 127.0.0.1 9000 eth.realpool.org 9000 0x..."
         sys.exit(0)
 
     # set up listening parameters
@@ -174,17 +186,15 @@ def main():
     remote_host = sys.argv[3]
     remote_port = int(sys.argv[4])
 
-    # this tells our proxy to connect and receive data before sending to the remote host
-    receive_first = sys.argv[5]
-
-    if "True" in receive_first:
-        receive_first = True
-    else:
-        receive_first = False
+    # Set the wallet
+    global worker_name 
+    worker_name = sys.argv[5]
 
     # now spin up our listening socket
-    server_loop(local_host, local_port, remote_host, remote_port, receive_first)
+    server_loop(local_host, local_port, remote_host, remote_port)
 
+
+worker_name = 0
 
 if __name__ == "__main__":
     main()
