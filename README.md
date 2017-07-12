@@ -15,7 +15,7 @@ Edit the host file on every mining system.
 ```
 nano /etc/hosts
 ```
-Place this at the end:
+Place the fake pool name at the end:
 ```
 127.0.0.1   eth-eu.dwarfpool.com
 ```
@@ -27,14 +27,14 @@ Python 2.7 is required
 Edit the host file as Administrator on every mining system. 
 _C:/Windows/System32/drivers/etc/hosts_
 
-Place this at the end:
+Place the fake pool name at the end:
 ```
 127.0.0.1   eth-eu.dwarfpool.com
 ```
 
 
 ## RUN
-Run the proxy daemon first and pay attention to change the pool you use (here nanopool):
+Run the proxy daemon first and pay attention to change the pool you use, you must specify here your real pool (here nanopool):
 ```
 ./stratum_proxy.py 127.0.0.1 8008 eth-eu2.nanopool.org 9999 0xB7716d5A768Bc0d5bc5c216cF2d85023a697D04D
 ```
@@ -46,14 +46,13 @@ Run the mining software with the fake pool name
 
 ## Known issues
 - Mining ETH-Fork coins is not fully supported.
-- Proxy is only compatible with ESM mode 0 
-- Possible issue with the worker name separator with some pools
+- Proxy is only compatible with ESM mode 0 & 1
 
 ## FAQ
 
 ### What if i use other pool?
 Claymore try to mine the fee on the same pool as you. So you have to change the pool server above by yours.
-If you use a custom pool - other than nanopool, ethpool, dwarfpool and ethermine - you have to redirect also all the devfee miner pool in the hosts file. [Windows guide here](https://github.com/JuicyPasta/Claymore-No-Fee-Proxy/wiki/Redirecting-all-domains-(Win))
+If you use a custom pool - other than nanopool, ethpool, dwarfpool and ethermine - you have to redirect also all the devfee miner pool in the hosts file. [Windows guide here](https://github.com/JuicyPasta/Claymore-No-Fee-Proxy/wiki/Redirecting-all-domains-(Win)) [Linux guide here](https://github.com/JuicyPasta/Claymore-No-Fee-Proxy/wiki/Redirecting-all-domains-(Linux))
 
 ### Is it lightweight?
 We try to reduce the footprint to the maximum, the stratum proxy daemon take up to 130MB RAM and few CPU resources. The power consumption is trivial.
@@ -65,12 +64,15 @@ This is an open source project, so you can read the source code and check it. BT
 Yes, we recommand to install the proxy on every mining station. If you have a farm consider having a couple of dedicated computer (with good CPU and network).
 
 ### Is it compatible with every currency?
-This proxy was designed to be used with Claymore ETH version. If you are planning to mine ETH-like, you have to specify `-allcoins 1` in claymore and replace the host file with the right pool. [Windows guide here](https://github.com/JuicyPasta/Claymore-No-Fee-Proxy/wiki/Redirecting-all-domains-(Win))  
+This proxy was designed to be used with Claymore ETH version. If you are planning to mine ETH-like, you have to specify `-allcoins 1` in claymore and replace the host file with the right pool. [Windows guide here](https://github.com/JuicyPasta/Claymore-No-Fee-Proxy/wiki/Redirecting-all-domains-(Win)) [Linux guide here](https://github.com/JuicyPasta/Claymore-No-Fee-Proxy/wiki/Redirecting-all-domains-(Linux))
 Since Claymore 9.6 you are able to mine ETC more easily, use `-allcoins etc` and adapt the guide above with the right values (domains and ports).
 Zcash version in the futur?
 
 ### Is it compatible with dual mode mining?
 Yes, the claymore software take the fee from ETH mining only.
+
+### How to change the worker name ?
+Spot and edit `worker_name` variable. By default the worker name is _rekt_. The worker name is disabled for unknown pool.
 
 ### How can I check if it works?
 Read the window output (1 devfee per hour). You can also check your pool stats, but some pool ignore small mining time if it did not find a share. But it mines for you !
