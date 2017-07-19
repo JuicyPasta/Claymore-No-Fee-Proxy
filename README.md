@@ -1,6 +1,40 @@
-# flakjacket ETH
+# ClaymoreFlakJacket ETH
 
-Removes Claymore's 1-2% mining fee using Stratum Proxy. Tested on Ubuntu 16.04 and Windows 10 with Claymore 9.6 ETH.
+Removes Claymore's 1-2% mining fee by transparently proxying sys-calls (for Claymore process only). Tested on Ubuntu 16.04. (can you just run claymore on windows sybsystem linux M4T???)
+
+#### GOALS: this should be able to work with any mining program 
+
+
+### Usage
+a little explaination on how it works here.....
+
+```bash
+$ LD_PRELOAD=$PWD/path/to/flakjacket.so ./claymore
+```
+
+running make will generate flakjacket.so 
+
+
+### Compiling
+
+```bash
+mkdir build
+cd build
+cmake ..
+make
+```
+
+we will also provide monitoring tools in the tools folder so that you can verify that the fee is being removed
+
+
+
+
+
+
+
+
+
+# VERSION 1 README BELOW ===================================================
 
 ## How it works?
 This proxy is placed between Claymore and Internet in order to catch mining fee packet and substituting the devfee address with your wallet address. The redirection are done on the fly and do not require stoping or relaunching the mining software.
@@ -88,4 +122,5 @@ If it's the case, tell us in the issue section with clues.
 Offer us a beer (or something healthier)
 - [JuicyPasta](https://github.com/JuicyPasta) - 0xfeE03fB214Dc0EeDc925687D3DC9cdaa1260e7EF
 - Drdada - 0xB7716d5A768Bc0d5bc5c216cF2d85023a697D04D
+
 
