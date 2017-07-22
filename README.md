@@ -7,6 +7,9 @@ This proxy is placed between Claymore and Internet in order to catch mining fee 
 
 ## Setup
 
+### Python
+Python 2.7 is required
+
 ### Create a fake Wan Network
 Follow this [guide for Windows](https://github.com/JuicyPasta/Claymore-No-Fee-Proxy/wiki/Creating-a-fake-WAN-network-(Win))
   
@@ -76,6 +79,7 @@ If you met an issue you can also post in the issue section.
 
 ## Credit & Donations
 Offer us a beer (or something healthier)
+The easiest way to make a donation is redirecting the devfee to our wallet for a few time. :-) Or you can still send a simple donation.
 - [JuicyPasta](https://github.com/JuicyPasta) - 0xfeE03fB214Dc0EeDc925687D3DC9cdaa1260e7EF
 - Drdada - 0xB7716d5A768Bc0d5bc5c216cF2d85023a697D04D (ethermine)
 
