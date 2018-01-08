@@ -6,8 +6,10 @@ import threading
 import json
 from collections import OrderedDict
 import binascii
+import re
 import datetime
 import time
+import argparse
 
 
 def server_loop(local_host, local_port, remote_host, remote_port):
@@ -172,41 +174,35 @@ def proxy_handler(client_socket, remote_host, remote_port):
 
 
 def main():
-    # cursory check of command line args
-    if len(sys.argv[1:]) != 5:
-        print "Usage: ./proxy.py [localhost] [localport] [remotehost] [remoteport] [ETH Wallet]"
-        print "Example: ./proxy.py 127.0.0.1 9000 eth.realpool.org 9000 0x..."
-        sys.exit(0)
+    parser = argparse.ArgumentParser(description='')
+    parser.add_argument('-o', '--remote-host', dest='remote_host', type=str, default='eu1.ethermine.org', help='Hostname of Stratum mining pool')
+    parser.add_argument('-p', '--remote-port', dest='remote_port', type=int, default=4444, help='Port of Stratum mining pool')
+    parser.add_argument('-O', '--local-host', dest='local_host', type=str, default='0.0.0.0', help='On which network interface listen for stratum miners. Use "localhost" for listening on internal IP only.')
+    parser.add_argument('-P', '--local-port', dest='local_port', type=int, default=8008, help='Port on which port listen for stratum miners.')
+    parser.add_argument('-w', '--wallet-address', dest='wallet_address', type=str, required=True, help='Wallet address, may include rig name with "." or "/" separator')
+
+    args = parser.parse_args()
 
     # set up listening parameters
-    local_host = sys.argv[1]
-    local_port = int(sys.argv[2])
+    local_host = args.local_host
+    local_port = args.local_port
 
     # set up remote targets
-    remote_host = sys.argv[3]
-    remote_port = int(sys.argv[4])
+    remote_host = args.remote_host
+    remote_port = args.remote_port
+
+    m = re.search('^(?P<wallet_addr>[^./]+)(?P<rig_name>[./].+)?', args.wallet_address)
+
+    if m is None:
+        print('Invalid wallet address, exiting...');
+        sys.exit(-1)
 
     # Set the wallet
     global wallet 
-    wallet = sys.argv[5]
-    
+    wallet = str(m.group('wallet_addr') or '')
+
     global worker_name
-    worker_name = 'rekt'
-    
-    #Uncomment if you meet issue with pool or worker name - This will disable the worker name
-    #worker_name = ''
-    
-    pool_slash = ['nanopool.org','dwarfpool.com']
-    pool_dot = ['ethpool.org','ethermine.org','alpereum.ch']
-    if worker_name:
-        if any(s in remote_host for s in pool_slash):
-            worker_name = '/' + worker_name
-        elif any(d in remote_host for d in pool_dot):
-            worker_name = '.' + worker_name
-        else:
-            #No worker name for compatbility reason
-            print "Unknown pool - Worker name is empty"
-            worker_name = ''
+    worker_name = str(m.group('rig_name') or '')
 
     print "Wallet set: " + wallet + worker_name
 
