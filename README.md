@@ -16,9 +16,31 @@ Follow this [guide for Windows](https://github.com/JuicyPasta/Claymore-No-Fee-Pr
 NB: DNS redirection is not mandatory anymore (except for ETH-fork mining).
 
 ## RUN
+
 Run the proxy daemon first and pay attention to change the pool you use, you must specify here your real pool (here nanopool):
 ```
-./stratum_proxy.py 0.0.0.0 8008 eth-eu2.nanopool.org 9999 0xB7716d5A768Bc0d5bc5c216cF2d85023a697D04D
+./stratum_proxy.py --local-host 0.0.0.0 --local-port 8008 --remote-host eth-eu2.nanopool.org --remote-port 9999 --wallet-address 0xB7716d5A768Bc0d5bc5c216cF2d85023a697D04D
+```
+
+Help :
+```
+usage: stratum_proxy.py [-h] [-o REMOTE_HOST] [-p REMOTE_PORT] [-O LOCAL_HOST]
+                        [-P LOCAL_PORT] -w WALLET_ADDRESS
+
+optional arguments:
+  -h, --help            show this help message and exit
+  -o REMOTE_HOST, --remote-host REMOTE_HOST
+                        Hostname of Stratum mining pool
+  -p REMOTE_PORT, --remote-port REMOTE_PORT
+                        Port of Stratum mining pool
+  -O LOCAL_HOST, --local-host LOCAL_HOST
+                        On which network interface listen for stratum miners.
+                        Use "localhost" for listening on internal IP only.
+  -P LOCAL_PORT, --local-port LOCAL_PORT
+                        Port on which port listen for stratum miners.
+  -w WALLET_ADDRESS, --wallet-address WALLET_ADDRESS
+                        Wallet address, may include rig name with "." or "/"
+                        separator
 ```
 
 Run the mining software with the fake WAN IP
